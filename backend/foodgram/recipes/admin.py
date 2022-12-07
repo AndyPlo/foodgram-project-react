@@ -6,8 +6,8 @@ from . import models
 @admin.register(models.Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
     list_display = ('pk', 'name', 'measurement_unit')
-    list_editable = ('name', 'measurement_unit')
-    list_filter = ('name', )
+    # list_filter = ('name', )
+    search_fields = ('name', )
 
 
 @admin.register(models.Tag)
@@ -35,3 +35,21 @@ class RecipeAdmin(admin.ModelAdmin):
 class RecipeIngredientAdmin(admin.ModelAdmin):
     list_display = ('pk', 'recipe', 'ingredient', 'amount')
     list_editable = ('recipe', 'ingredient', 'amount')
+
+
+@admin.register(models.Subscribe)
+class SubscribeAdmin(admin.ModelAdmin):
+    list_display = ('pk', 'user', 'author')
+    list_editable = ('user', 'author')
+
+
+@admin.register(models.Favorite)
+class FavoriteAdmin(admin.ModelAdmin):
+    list_display = ('pk', 'user', 'recipe')
+    list_editable = ('user', 'recipe')
+
+
+@admin.register(models.Shopping_cart)
+class ShoppingCartAdmin(admin.ModelAdmin):
+    list_display = ('pk', 'user', 'recipe')
+    list_editable = ('user', 'recipe')
