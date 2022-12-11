@@ -1,8 +1,6 @@
-from django.db import models
-from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, RegexValidator
-
-User = get_user_model()
+from django.db import models
+from users.models import User
 
 
 class Ingredient(models.Model):
@@ -130,34 +128,6 @@ class Recipe_ingredient(models.Model):
     class Meta:
         verbose_name = 'Ингредиенты в рецепте'
         verbose_name_plural = 'Ингредиенты в рецептах'
-
-
-class Subscribe(models.Model):
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='subscriber',
-        verbose_name='Подписчик'
-    )
-    author = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='subscribing',
-        verbose_name='Подписан'
-    )
-
-    def __str__(self):
-        return f'{self.user.username} - {self.author.username}'
-
-    class Meta:
-        verbose_name = 'Подписка на авторов'
-        verbose_name_plural = 'Подписки на авторов'
-        constraints = [
-            models.UniqueConstraint(
-                fields=['user', 'author'],
-                name='unique_subscribe'
-            )
-        ]
 
 
 class Favorite(models.Model):
