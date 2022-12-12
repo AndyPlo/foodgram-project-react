@@ -58,6 +58,16 @@ class UserCreateSerializer(UserCreateSerializer):
             'email': {'required': True, 'allow_blank': False},
         }
 
+    def validate(self, data):
+        invalid_usernames = [
+            'me', 'set_password', 'subscriptions', 'subscribe'
+        ]
+        if self.initial_data.get('username') in invalid_usernames:
+            raise serializers.ValidationError(
+                {"username": ["Вы не можете использоват этот username!"]}
+            )
+        return data
+
 
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
@@ -91,3 +101,34 @@ class RecipeReadSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = '__all__'
+
+
+class RecipeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Recipe
+        fields = ('id', 'name', 'image', 'cooking_time')
+
+
+class SubscriptionsSerializer(serializers.ModelSerializer):
+    is_subscribed = serializers.SerializerMethodField()
+    recipes = RecipeSerializer(many=True)
+    recipes_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ('email', 'id', 'username',
+                  'first_name', 'last_name',
+                  'is_subscribed', 'recipes', 'recipes_count')
+
+    def get_is_subscribed(self, obj):
+        return Subscribe.objects.filter(user=self.context['request'].user,
+                                        author=obj).exists()
+
+    def get_recipes_count(self, obj):
+        return obj.recipes.count()
+
+
+class SubscribeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Subscribe
+        fields = ('id', )

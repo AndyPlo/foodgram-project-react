@@ -10,7 +10,6 @@ v1_router.register(
     r'ingredients', views.IngredientViewSet, basename='ingredients')
 
 urlpatterns = [
-    path('users/set_password/', views.set_password, name='set_password'),
     path('', include(v1_router.urls)),
     path(r'auth/', include('djoser.urls.authtoken')),
 ]
