@@ -3,7 +3,7 @@ from recipes.models import Ingredient, Recipe
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from users.models import Subscribe, User
 
@@ -19,6 +19,7 @@ class UserViewSet(mixins.CreateModelMixin,
                   viewsets.GenericViewSet):
     queryset = User.objects.all()
     pagination_class = PageNumberPagination
+    permission_classes = (AllowAny,)
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
@@ -26,10 +27,10 @@ class UserViewSet(mixins.CreateModelMixin,
         return UserCreateSerializer
 
     @action(detail=False, methods=['get'],
-            serializer_class=UserReadSerializer,
-            pagination_class=None)
+            pagination_class=None,
+            permission_classes=(IsAuthenticated,))
     def me(self, request):
-        serializer = self.get_serializer(request.user)
+        serializer = UserReadSerializer(request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['post'],

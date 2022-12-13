@@ -1,23 +1,23 @@
+from django.contrib.auth.password_validation import validate_password
+from django.core import exceptions as django_exceptions
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from recipes.models import Ingredient, Recipe, Recipe_ingredient, Tag
 from rest_framework import serializers
-from users.models import User, Subscribe
-from django.contrib.auth.password_validation import validate_password
-from django.core import exceptions as django_exceptions
+from users.models import Subscribe, User
 
 
 class SetPasswordSerializer(serializers.Serializer):
     current_password = serializers.CharField()
     new_password = serializers.CharField()
 
-    def validate(self, attrs):
+    def validate(self, obj):
         try:
-            validate_password(attrs["new_password"])
+            validate_password(obj["new_password"])
         except django_exceptions.ValidationError as e:
             raise serializers.ValidationError(
                 {"new_password": list(e.messages)}
             )
-        return super().validate(attrs)
+        return super().validate(obj)
 
     def update(self, instance, validated_data):
         if not instance.check_password(validated_data['current_password']):
@@ -43,8 +43,11 @@ class UserReadSerializer(UserSerializer):
                   'first_name', 'last_name', 'is_subscribed')
 
     def get_is_subscribed(self, obj):
-        return Subscribe.objects.filter(user=self.context['request'].user,
-                                        author=obj).exists()
+        try:
+            return Subscribe.objects.filter(user=self.context['request'].user,
+                                            author=obj).exists()
+        except Exception:
+            return False
 
 
 class UserCreateSerializer(UserCreateSerializer):
@@ -58,7 +61,7 @@ class UserCreateSerializer(UserCreateSerializer):
             'email': {'required': True, 'allow_blank': False},
         }
 
-    def validate(self, data):
+    def validate(self, obj):
         invalid_usernames = [
             'me', 'set_password', 'subscriptions', 'subscribe'
         ]
@@ -66,7 +69,7 @@ class UserCreateSerializer(UserCreateSerializer):
             raise serializers.ValidationError(
                 {"username": ["Вы не можете использоват этот username!"]}
             )
-        return data
+        return obj
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -129,6 +132,27 @@ class SubscriptionsSerializer(serializers.ModelSerializer):
 
 
 class SubscribeSerializer(serializers.ModelSerializer):
+    email = serializers.ReadOnlyField()
+    username = serializers.ReadOnlyField()
+    is_subscribed = serializers.SerializerMethodField()
+    recipes = RecipeSerializer(many=True, read_only=True)
+    recipes_count = serializers.SerializerMethodField()
+
     class Meta:
-        model = Subscribe
-        fields = ('id', )
+        model = User
+        fields = ('email', 'id', 'username',
+                  'first_name', 'last_name',
+                  'is_subscribed', 'recipes', 'recipes_count')
+
+    def validate(self, obj):
+        if (self.context['request'].user == obj):
+            raise serializers.ValidationError({"Ошибка подписки"})
+        return obj
+
+    def get_is_subscribed(self, obj):
+        print(obj)
+        return Subscribe.objects.filter(user=self.context['request'].user,
+                                        author=obj).exists()
+
+    def get_recipes_count(self, obj):
+        return obj.recipes.count()
