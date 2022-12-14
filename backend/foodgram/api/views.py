@@ -1,16 +1,21 @@
 from django.shortcuts import get_object_or_404
-from recipes.models import Ingredient, Recipe
-from rest_framework import mixins, status, viewsets, filters
+from recipes.models import Ingredient, Recipe, Tag
+from rest_framework import filters, mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from users.models import Subscribe, User
 
-from .serializers import (IngredientSerializer, RecipeReadSerializer,
-                          SetPasswordSerializer, SubscribeAuthorSerializer,
-                          SubscriptionsSerializer, UserCreateSerializer,
+from .serializers import (IngredientSerializer, RecipeCreateSerializer,
+                          RecipeReadSerializer, SetPasswordSerializer,
+                          SubscribeAuthorSerializer, SubscriptionsSerializer,
+                          TagSerializer, UserCreateSerializer,
                           UserReadSerializer)
+
+# ---------------------------------------------------------------
+#                       Приложение users
+# ---------------------------------------------------------------
 
 
 class UserViewSet(mixins.CreateModelMixin,
@@ -71,11 +76,9 @@ class UserViewSet(mixins.CreateModelMixin,
             return Response('Успешная отписка',
                             status=status.HTTP_204_NO_CONTENT)
 
-
-class RecipeViewSet(viewsets.ModelViewSet):
-    queryset = Recipe.objects.all()
-    serializer_class = RecipeReadSerializer
-    pagination_class = PageNumberPagination
+# ---------------------------------------------------------------
+#                       Приложение recipes
+# ---------------------------------------------------------------
 
 
 class IngredientViewSet(mixins.ListModelMixin,
@@ -86,3 +89,21 @@ class IngredientViewSet(mixins.ListModelMixin,
     pagination_class = None
     filter_backends = (filters.SearchFilter, )
     search_fields = ('name', )
+
+
+class TagViewSet(mixins.ListModelMixin,
+                 mixins.RetrieveModelMixin,
+                 viewsets.GenericViewSet):
+    queryset = Tag.objects.all()
+    serializer_class = TagSerializer
+    pagination_class = None
+
+
+class RecipeViewSet(viewsets.ModelViewSet):
+    queryset = Recipe.objects.all()
+    pagination_class = PageNumberPagination
+
+    def get_serializer_class(self):
+        if self.action in ('list', 'retrieve'):
+            return RecipeReadSerializer
+        return RecipeCreateSerializer
