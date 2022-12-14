@@ -1,14 +1,14 @@
 from django.shortcuts import get_object_or_404
 from recipes.models import Ingredient, Recipe
-from rest_framework import mixins, status, viewsets
+from rest_framework import mixins, status, viewsets, filters
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from users.models import Subscribe, User
 
 from .serializers import (IngredientSerializer, RecipeReadSerializer,
-                          SetPasswordSerializer, SubscribeSerializer,
+                          SetPasswordSerializer, SubscribeAuthorSerializer,
                           SubscriptionsSerializer, UserCreateSerializer,
                           UserReadSerializer)
 
@@ -31,7 +31,8 @@ class UserViewSet(mixins.CreateModelMixin,
             permission_classes=(IsAuthenticated,))
     def me(self, request):
         serializer = UserReadSerializer(request.user)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.data,
+                        status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['post'],
             permission_classes=(IsAuthenticated,))
@@ -39,19 +40,16 @@ class UserViewSet(mixins.CreateModelMixin,
         serializer = SetPasswordSerializer(request.user, data=request.data)
         if serializer.is_valid(raise_exception=True):
             serializer.save()
-        return Response(
-            'Пароль успешно изменен!',
-            status=status.HTTP_204_NO_CONTENT
-        )
+        return Response('Пароль успешно изменен!',
+                        status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=['get'],
             permission_classes=(IsAuthenticated,))
     def subscriptions(self, request):
         queryset = User.objects.filter(subscribing__user=request.user)
         pages = self.paginate_queryset(queryset)
-        serializer = SubscriptionsSerializer(
-            pages, many=True,
-            context={'request': request})
+        serializer = SubscriptionsSerializer(pages, many=True,
+                                             context={'request': request})
         return self.get_paginated_response(serializer.data)
 
     @action(detail=True, methods=['post', 'delete'],
@@ -60,11 +58,12 @@ class UserViewSet(mixins.CreateModelMixin,
         author = get_object_or_404(User, id=kwargs['pk'])
 
         if request.method == 'POST':
-            serializer = SubscribeSerializer(
+            serializer = SubscribeAuthorSerializer(
                 author, data=request.data, context={"request": request})
             serializer.is_valid(raise_exception=True)
             Subscribe.objects.create(user=request.user, author=author)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.data,
+                            status=status.HTTP_201_CREATED)
 
         if request.method == 'DELETE':
             get_object_or_404(
@@ -84,3 +83,6 @@ class IngredientViewSet(mixins.ListModelMixin,
                         viewsets.GenericViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
+    pagination_class = None
+    filter_backends = (filters.SearchFilter, )
+    search_fields = ('name', )

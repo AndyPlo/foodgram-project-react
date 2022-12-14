@@ -131,7 +131,7 @@ class SubscriptionsSerializer(serializers.ModelSerializer):
         return obj.recipes.count()
 
 
-class SubscribeSerializer(serializers.ModelSerializer):
+class SubscribeAuthorSerializer(serializers.ModelSerializer):
     email = serializers.ReadOnlyField()
     username = serializers.ReadOnlyField()
     is_subscribed = serializers.SerializerMethodField()
