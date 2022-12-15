@@ -127,7 +127,7 @@ class SubscribeAuthorSerializer(serializers.ModelSerializer):
 
     def validate(self, obj):
         if (self.context['request'].user == obj):
-            raise serializers.ValidationError({'Ошибка подписки.'})
+            raise serializers.ValidationError({'errors': 'Ошибка подписки.'})
         return obj
 
     def get_is_subscribed(self, obj):
@@ -242,20 +242,20 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             )
         return obj
 
-    def tags_and_ingedients_set(self, recipe, tags, ingredients):
+    def tags_and_ingredients_set(self, recipe, tags, ingredients):
         recipe.tags.set(tags)
-        for ingredient in ingredients:
-            current_ingredient = Ingredient.objects.get(pk=ingredient['id'])
-            Recipe_ingredient.objects.create(recipe=recipe,
-                                             ingredient=current_ingredient,
-                                             amount=ingredient['amount'])
+        [Recipe_ingredient.objects.create(
+            recipe=recipe,
+            ingredient=Ingredient.objects.get(pk=ingredient['id']),
+            amount=ingredient['amount']
+         ) for ingredient in ingredients]
 
     def create(self, validated_data):
         tags = validated_data.pop('tags')
         ingredients = validated_data.pop('ingredients')
         recipe = Recipe.objects.create(author=self.context['request'].user,
                                        **validated_data)
-        self.tags_and_ingedients_set(recipe, tags, ingredients)
+        self.tags_and_ingredients_set(recipe, tags, ingredients)
         return recipe
 
     def update(self, instance, validated_data):
@@ -272,9 +272,10 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         Recipe_ingredient.objects.filter(
             recipe=instance,
             ingredient__in=instance.ingredients.all()).delete()
-        self.tags_and_ingedients_set(instance, tags, ingredients)
+        self.tags_and_ingredients_set(instance, tags, ingredients)
         instance.save()
         return instance
 
     def to_representation(self, instance):
-        return RecipeReadSerializer(instance).data
+        return RecipeReadSerializer(instance,
+                                    context=self.context).data
