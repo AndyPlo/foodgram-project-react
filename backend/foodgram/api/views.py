@@ -1,12 +1,14 @@
 from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
 from recipes.models import Favorite, Ingredient, Recipe, Shopping_cart, Tag
-from rest_framework import filters, mixins, status, viewsets
+from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from users.models import Subscribe, User
 
+from .filters import IngredientFilter, RecipeFilter
 from .permissions import IsAuthorOrReadOnly
 from .serializers import (IngredientSerializer, RecipeCreateSerializer,
                           RecipeReadSerializer, RecipeSerializer,
@@ -86,15 +88,17 @@ class IngredientViewSet(mixins.ListModelMixin,
                         mixins.RetrieveModelMixin,
                         viewsets.GenericViewSet):
     queryset = Ingredient.objects.all()
+    permission_classes = (AllowAny, )
     serializer_class = IngredientSerializer
     pagination_class = None
-    filter_backends = (filters.SearchFilter, )
-    search_fields = ('name', )
+    filter_backends = (IngredientFilter, )
+    search_fields = ('^name', )
 
 
 class TagViewSet(mixins.ListModelMixin,
                  mixins.RetrieveModelMixin,
                  viewsets.GenericViewSet):
+    permission_classes = (AllowAny, )
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     pagination_class = None
@@ -104,6 +108,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     pagination_class = PageNumberPagination
     permission_classes = (IsAuthorOrReadOnly, )
+    filter_backends = (DjangoFilterBackend, )
+    filterset_class = RecipeFilter
     http_method_names = ['get', 'post', 'patch', 'create', 'delete']
 
     def get_serializer_class(self):

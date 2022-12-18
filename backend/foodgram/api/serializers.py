@@ -1,6 +1,7 @@
 from django.contrib.auth.password_validation import validate_password
 from django.core import exceptions as django_exceptions
 from djoser.serializers import UserCreateSerializer, UserSerializer
+from drf_base64.fields import Base64ImageField
 from recipes.models import (Favorite, Ingredient, Recipe, Recipe_ingredient,
                             Shopping_cart, Tag)
 from rest_framework import serializers
@@ -38,7 +39,7 @@ class UserCreateSerializer(UserCreateSerializer):
                   'password')
         extra_kwargs = {
             'first_name': {'required': True, 'allow_blank': False},
-            'last_name': {'required': True, 'allow_blank': False},
+            'last_name': {'required': True, 'allow_bl+ank': False},
             'email': {'required': True, 'allow_blank': False},
         }
 
@@ -83,6 +84,10 @@ class SetPasswordSerializer(serializers.Serializer):
 
 class RecipeSerializer(serializers.ModelSerializer):
     """Список рецептов без ингридиентов."""
+    image = Base64ImageField(read_only=True)
+    name = serializers.ReadOnlyField()
+    cooking_time = serializers.ReadOnlyField()
+
     class Meta:
         model = Recipe
         fields = ('id', 'name',
@@ -103,8 +108,11 @@ class SubscriptionsSerializer(serializers.ModelSerializer):
                   'recipes', 'recipes_count')
 
     def get_is_subscribed(self, obj):
-        return Subscribe.objects.filter(user=self.context['request'].user,
-                                        author=obj).exists()
+        try:
+            return Subscribe.objects.filter(user=self.context['request'].user,
+                                            author=obj).exists()
+        except Exception:
+            return False
 
     def get_recipes_count(self, obj):
         return obj.recipes.count()
@@ -131,8 +139,11 @@ class SubscribeAuthorSerializer(serializers.ModelSerializer):
         return obj
 
     def get_is_subscribed(self, obj):
-        return Subscribe.objects.filter(user=self.context['request'].user,
-                                        author=obj).exists()
+        try:
+            return Subscribe.objects.filter(user=self.context['request'].user,
+                                            author=obj).exists()
+        except Exception:
+            return False
 
     def get_recipes_count(self, obj):
         return obj.recipes.count()
@@ -177,6 +188,7 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         many=True, read_only=True, source='recipes')
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
+    image = Base64ImageField()
 
     class Meta:
         model = Recipe
@@ -187,12 +199,19 @@ class RecipeReadSerializer(serializers.ModelSerializer):
                   'text', 'cooking_time')
 
     def get_is_favorited(self, obj):
-        return Favorite.objects.filter(user=self.context['request'].user,
-                                       recipe=obj).exists()
+        try:
+            return Favorite.objects.filter(user=self.context['request'].user,
+                                           recipe=obj).exists()
+        except Exception:
+            return False
 
     def get_is_in_shopping_cart(self, obj):
-        return Shopping_cart.objects.filter(user=self.context['request'].user,
-                                            recipe=obj).exists()
+        try:
+            return Shopping_cart.objects.filter(
+                user=self.context['request'].user,
+                recipe=obj).exists()
+        except Exception:
+            return False
 
 
 class RecipeIngredientCreateSerializer(serializers.ModelSerializer):
@@ -211,6 +230,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     author = UserReadSerializer(read_only=True)
     id = serializers.ReadOnlyField()
     ingredients = RecipeIngredientCreateSerializer(many=True)
+    image = Base64ImageField()
 
     class Meta:
         model = Recipe
@@ -223,6 +243,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             'tags': {'required': True, 'allow_blank': False},
             'name': {'required': True, 'allow_blank': False},
             'text': {'required': True, 'allow_blank': False},
+            'image': {'required': True, 'allow_blank': False},
             'cooking_time': {'required': True},
         }
 
@@ -259,8 +280,8 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         return recipe
 
     def update(self, instance, validated_data):
+        instance.image = validated_data.get('image', instance.image)
         try:
-            # instance.image = validated_data.pop('image')
             instance.name = validated_data.pop('name')
             instance.text = validated_data.pop('text')
             instance.cooking_time = validated_data.pop('cooking_time')
