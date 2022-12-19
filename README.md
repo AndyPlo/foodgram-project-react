@@ -19,10 +19,10 @@
 1. Установите на сервере `docker` и `docker-dompose`.
 2. Создайте файл `/infra/.env`. Шаблон для заполнения файла нахоится в `/infra/.env.example`.
 3. Выполните команду `docker-compose up -d --buld`.
-4. Выполните миграции `docker-compose exec web python manage.py migrate`.
-5. Создайте суперюзера `docker-compose exec web python manage.py createsuperuser`.
-6. Соберите статику `docker-compose exec web python manage.py collectstatic --no-input`.
-7. Заполните базу ингредиентами `docker-compose exec web python manage.py load_ingredients`.
+4. Выполните миграции `docker-compose exec backend python manage.py migrate`.
+5. Создайте суперюзера `docker-compose exec backend python manage.py createsuperuser`.
+6. Соберите статику `docker-compose exec backend python manage.py collectstatic --no-input`.
+7. Заполните базу ингредиентами `docker-compose exec backend python manage.py load_ingredients`.
 8. Документация к API находится по адресу: <http://localhost/api/docs/redoc.html>.
 
 ## Автор
