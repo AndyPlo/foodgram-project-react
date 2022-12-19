@@ -1,5 +1,6 @@
 import csv
 import os
+from foodgram import settings
 
 from django.core.management.base import BaseCommand
 from progress.bar import IncrementalBar
@@ -14,11 +15,10 @@ def ingredient_create(row):
 
 
 class Command(BaseCommand):
-    help = "Load test DB from dir (../static/data/)"
+    help = "Load ingredients to DB"
 
     def handle(self, *args, **options):
-        path = os.path.abspath(
-            os.path.join(__file__, "../../../../../../data/ingredients.csv"))
+        path = os.path.join(settings.BASE_DIR, 'ingredients.csv')
         with open(path, 'r', encoding='utf-8') as file:
             row_count = sum(1 for row in file)
         with open(path, 'r', encoding='utf-8') as file:
@@ -29,4 +29,4 @@ class Command(BaseCommand):
                 bar.next()
                 ingredient_create(row)
             bar.finish()
-        self.stdout.write("!!!The database has been loaded successfully!!!")
+        self.stdout.write("[!] The ingredients has been loaded successfully.")
