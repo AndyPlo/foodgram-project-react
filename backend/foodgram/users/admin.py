@@ -8,8 +8,9 @@ class UserAdmin(admin.ModelAdmin):
     list_display = (
         'username', 'pk', 'email', 'first_name', 'last_name',
     )
-    # list_editable = ('role',)
-    search_fields = ('username', 'email',)
+    list_editable = ('password', )
+    list_filter = ('username', 'email')
+    search_fields = ('username', 'email')
     empty_value_display = '-пусто-'
 
 
@@ -17,3 +18,4 @@ class UserAdmin(admin.ModelAdmin):
 class SubscribeAdmin(admin.ModelAdmin):
     list_display = ('pk', 'user', 'author')
     list_editable = ('user', 'author')
+    empty_value_display = '-пусто-'
