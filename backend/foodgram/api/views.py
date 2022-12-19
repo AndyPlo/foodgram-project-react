@@ -10,6 +10,7 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from users.models import Subscribe, User
+from foodgram.settings import FILE_NAME
 
 from .filters import RecipeFilter
 from .permissions import IsAuthorOrReadOnly
@@ -180,11 +181,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
                          'ingredient__measurement_unit')
         )
         file_list = []
-        file_name = 'shopping_cart.txt'
         [file_list.append(
             '{} - {} {}.'.format(*ingredient)) for ingredient in ingredients]
         file = HttpResponse('Cписок покупок:\n' + '\n'.join(file_list),
                             content_type='text/plain')
-        file['Content-Disposition'] = ('attachment; filename={0}'
-                                       .format(file_name))
+        file['Content-Disposition'] = (f'attachment; filename={FILE_NAME}')
         return file
