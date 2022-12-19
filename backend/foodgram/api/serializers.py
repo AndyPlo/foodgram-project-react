@@ -48,7 +48,7 @@ class UserCreateSerializer(UserCreateSerializer):
                              'subscriptions', 'subscribe']
         if self.initial_data.get('username') in invalid_usernames:
             raise serializers.ValidationError(
-                {'username': 'Вы не можете использоват этот username.'}
+                {'username': 'Вы не можете использовать этот username.'}
             )
         return obj
 

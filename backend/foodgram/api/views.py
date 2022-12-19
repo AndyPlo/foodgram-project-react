@@ -1,14 +1,17 @@
+from django.db.models import Sum
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from recipes.models import Favorite, Ingredient, Recipe, Shopping_cart, Tag
-from rest_framework import mixins, status, viewsets
+from recipes.models import (Favorite, Ingredient, Recipe, Recipe_ingredient,
+                            Shopping_cart, Tag)
+from rest_framework import filters, mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from users.models import Subscribe, User
 
-from .filters import IngredientFilter, RecipeFilter
+from .filters import RecipeFilter
 from .permissions import IsAuthorOrReadOnly
 from .serializers import (IngredientSerializer, RecipeCreateSerializer,
                           RecipeReadSerializer, RecipeSerializer,
@@ -91,7 +94,7 @@ class IngredientViewSet(mixins.ListModelMixin,
     permission_classes = (AllowAny, )
     serializer_class = IngredientSerializer
     pagination_class = None
-    filter_backends = (IngredientFilter, )
+    filter_backends = (filters.SearchFilter, )
     search_fields = ('^name', )
 
 
@@ -164,3 +167,24 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 {'detail': 'Рецепт успешно удален из списка покупок.'},
                 status=status.HTTP_204_NO_CONTENT
             )
+
+    @action(detail=False, methods=['get'],
+            permission_classes=(IsAuthenticated,))
+    def download_shopping_cart(self, request, **kwargs):
+        ingredients = (
+            Recipe_ingredient.objects
+            .filter(recipe__shopping_recipe__user=request.user)
+            .values('ingredient')
+            .annotate(total_amount=Sum('amount'))
+            .values_list('ingredient__name', 'total_amount',
+                         'ingredient__measurement_unit')
+        )
+        file_list = []
+        file_name = 'shopping_cart.txt'
+        [file_list.append(
+            '{} - {} {}.'.format(*ingredient)) for ingredient in ingredients]
+        file = HttpResponse('Cписок покупок:\n' + '\n'.join(file_list),
+                            content_type='text/plain')
+        file['Content-Disposition'] = ('attachment; filename={0}'
+                                       .format(file_name))
+        return file
