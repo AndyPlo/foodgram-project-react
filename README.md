@@ -4,7 +4,7 @@
 
 Проект реализован на `Django` и `DjangoRestFramework`. Доступ к данным реализован через API-интерфейс. Документация к API написана с использованием `Redoc`.
 
-<span style="color:red">**Проект находится в стадии разработки!**</span>
+**Проект находится в стадии разработки!**
 
 ## Особенности реализации
 
@@ -28,5 +28,3 @@
 ## Автор
 
  Андрей Плотников (Andy.Plo@yandex.ru)
-
-[![Django-app workflow](https://github.com/AndyPlo/yamdb_final/actions/workflows/yamdb_workflow.yml/badge.svg)](https://github.com/AndyPlo/yamdb_final/actions/workflows/yamdb_workflow.yml)
