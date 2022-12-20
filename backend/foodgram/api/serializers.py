@@ -39,7 +39,7 @@ class UserCreateSerializer(UserCreateSerializer):
                   'password')
         extra_kwargs = {
             'first_name': {'required': True, 'allow_blank': False},
-            'last_name': {'required': True, 'allow_bl+ank': False},
+            'last_name': {'required': True, 'allow_blank': False},
             'email': {'required': True, 'allow_blank': False},
         }
 
