@@ -23,7 +23,8 @@
 5. Создайте суперюзера `docker-compose exec backend python manage.py createsuperuser`.
 6. Соберите статику `docker-compose exec backend python manage.py collectstatic --no-input`.
 7. Заполните базу ингредиентами `docker-compose exec backend python manage.py load_ingredients`.
-8. Документация к API находится по адресу: <http://localhost/api/docs/redoc.html>.
+8. **Для корректного создания рецепта через фронт, надо создать пару тегов в базе через админку.**
+9. Документация к API находится по адресу: <http://localhost/api/docs/redoc.html>.
 
 ## Автор
 
