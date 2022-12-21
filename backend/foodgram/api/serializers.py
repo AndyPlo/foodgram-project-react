@@ -6,6 +6,7 @@ from recipes.models import (Favorite, Ingredient, Recipe, Recipe_ingredient,
                             Shopping_cart, Tag)
 from rest_framework import serializers
 from users.models import Subscribe, User
+from django.db import transaction
 
 # -----------------------------------------------------------------------------
 #                            Приложение users
@@ -23,11 +24,11 @@ class UserReadSerializer(UserSerializer):
                   'is_subscribed')
 
     def get_is_subscribed(self, obj):
-        try:
+        if (self.context.get('request')
+           and not self.context['request'].user.is_anonymous):
             return Subscribe.objects.filter(user=self.context['request'].user,
                                             author=obj).exists()
-        except Exception:
-            return False
+        return False
 
 
 class UserCreateSerializer(UserCreateSerializer):
@@ -108,11 +109,11 @@ class SubscriptionsSerializer(serializers.ModelSerializer):
                   'recipes', 'recipes_count')
 
     def get_is_subscribed(self, obj):
-        try:
+        if (self.context.get('request')
+           and not self.context['request'].user.is_anonymous):
             return Subscribe.objects.filter(user=self.context['request'].user,
                                             author=obj).exists()
-        except Exception:
-            return False
+        return False
 
     def get_recipes_count(self, obj):
         return obj.recipes.count()
@@ -139,11 +140,11 @@ class SubscribeAuthorSerializer(serializers.ModelSerializer):
         return obj
 
     def get_is_subscribed(self, obj):
-        try:
+        if (self.context.get('request')
+           and not self.context['request'].user.is_anonymous):
             return Subscribe.objects.filter(user=self.context['request'].user,
                                             author=obj).exists()
-        except Exception:
-            return False
+        return False
 
     def get_recipes_count(self, obj):
         return obj.recipes.count()
@@ -199,19 +200,19 @@ class RecipeReadSerializer(serializers.ModelSerializer):
                   'text', 'cooking_time')
 
     def get_is_favorited(self, obj):
-        try:
+        if (self.context.get('request')
+           and not self.context['request'].user.is_anonymous):
             return Favorite.objects.filter(user=self.context['request'].user,
                                            recipe=obj).exists()
-        except Exception:
-            return False
+        return False
 
     def get_is_in_shopping_cart(self, obj):
-        try:
+        if (self.context.get('request')
+           and not self.context['request'].user.is_anonymous):
             return Shopping_cart.objects.filter(
                 user=self.context['request'].user,
                 recipe=obj).exists()
-        except Exception:
-            return False
+        return False
 
 
 class RecipeIngredientCreateSerializer(serializers.ModelSerializer):
@@ -256,21 +257,26 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 {'ingredients': 'Нужно указать минимум 1 ингредиент.'}
             )
-        if (len({ingredient['id'] for ingredient in obj.get('ingredients')})
-           != len(obj.get('ingredients'))):
+        inrgedient_id_list = [item['id'] for item in obj.get('ingredients')]
+        unique_ingredient_id_list = set(inrgedient_id_list)
+        if len(inrgedient_id_list) != len(unique_ingredient_id_list):
             raise serializers.ValidationError(
                 {'ingredients': 'Ингредиенты должны быть уникальны.'}
             )
         return obj
 
+    @transaction.atomic
     def tags_and_ingredients_set(self, recipe, tags, ingredients):
         recipe.tags.set(tags)
-        [Recipe_ingredient.objects.create(
-            recipe=recipe,
-            ingredient=Ingredient.objects.get(pk=ingredient['id']),
-            amount=ingredient['amount']
-         ) for ingredient in ingredients]
+        Recipe_ingredient.objects.bulk_create(
+            [Recipe_ingredient(
+                recipe=recipe,
+                ingredient=Ingredient.objects.get(pk=ingredient['id']),
+                amount=ingredient['amount']
+            ) for ingredient in ingredients]
+        )
 
+    @transaction.atomic
     def create(self, validated_data):
         tags = validated_data.pop('tags')
         ingredients = validated_data.pop('ingredients')
@@ -279,15 +285,13 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         self.tags_and_ingredients_set(recipe, tags, ingredients)
         return recipe
 
+    @transaction.atomic
     def update(self, instance, validated_data):
         instance.image = validated_data.get('image', instance.image)
-        try:
-            instance.name = validated_data.pop('name')
-            instance.text = validated_data.pop('text')
-            instance.cooking_time = validated_data.pop('cooking_time')
-        except Exception as error_field:
-            raise serializers.ValidationError(
-                {str(error_field)[1:-1]: ['Обязательное поле.']})
+        instance.name = validated_data.get('name', instance.name)
+        instance.text = validated_data.get('text', instance.text)
+        instance.cooking_time = validated_data.get(
+            'cooking_time', instance.cooking_time)
         tags = validated_data.pop('tags')
         ingredients = validated_data.pop('ingredients')
         Recipe_ingredient.objects.filter(
