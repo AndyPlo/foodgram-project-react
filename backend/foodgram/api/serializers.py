@@ -109,11 +109,11 @@ class SubscriptionsSerializer(serializers.ModelSerializer):
                   'recipes', 'recipes_count')
 
     def get_is_subscribed(self, obj):
-        if (self.context.get('request')
-           and not self.context['request'].user.is_anonymous):
-            return Subscribe.objects.filter(user=self.context['request'].user,
-                                            author=obj).exists()
-        return False
+        return (
+            self.context.get('request').user.is_authenticated
+            and Subscribe.objects.filter(user=self.context['request'].user,
+                                         author=obj).exists()
+        )
 
     def get_recipes_count(self, obj):
         return obj.recipes.count()
@@ -140,11 +140,11 @@ class SubscribeAuthorSerializer(serializers.ModelSerializer):
         return obj
 
     def get_is_subscribed(self, obj):
-        if (self.context.get('request')
-           and not self.context['request'].user.is_anonymous):
-            return Subscribe.objects.filter(user=self.context['request'].user,
-                                            author=obj).exists()
-        return False
+        return (
+            self.context.get('request').user.is_authenticated
+            and Subscribe.objects.filter(user=self.context['request'].user,
+                                         author=obj).exists()
+        )
 
     def get_recipes_count(self, obj):
         return obj.recipes.count()
@@ -200,19 +200,19 @@ class RecipeReadSerializer(serializers.ModelSerializer):
                   'text', 'cooking_time')
 
     def get_is_favorited(self, obj):
-        if (self.context.get('request')
-           and not self.context['request'].user.is_anonymous):
-            return Favorite.objects.filter(user=self.context['request'].user,
-                                           recipe=obj).exists()
-        return False
+        return (
+            self.context.get('request').user.is_authenticated
+            and Favorite.objects.filter(user=self.context['request'].user,
+                                        recipe=obj).exists()
+        )
 
     def get_is_in_shopping_cart(self, obj):
-        if (self.context.get('request')
-           and not self.context['request'].user.is_anonymous):
-            return Shopping_cart.objects.filter(
+        return (
+            self.context.get('request').user.is_authenticated
+            and Shopping_cart.objects.filter(
                 user=self.context['request'].user,
                 recipe=obj).exists()
-        return False
+        )
 
 
 class RecipeIngredientCreateSerializer(serializers.ModelSerializer):
@@ -231,7 +231,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     author = UserReadSerializer(read_only=True)
     id = serializers.ReadOnlyField()
     ingredients = RecipeIngredientCreateSerializer(many=True)
-    image = Base64ImageField()
+    # image = Base64ImageField()
 
     class Meta:
         model = Recipe
@@ -244,11 +244,16 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             'tags': {'required': True, 'allow_blank': False},
             'name': {'required': True, 'allow_blank': False},
             'text': {'required': True, 'allow_blank': False},
-            'image': {'required': True, 'allow_blank': False},
+            # 'image': {'required': True, 'allow_blank': False},
             'cooking_time': {'required': True},
         }
 
     def validate(self, obj):
+        for field in ['name', 'text', 'cooking_time', 'image']:
+            if not obj.get(field):
+                raise serializers.ValidationError(
+                    {field: 'Обязательное поле.'}
+                )
         if not obj.get('tags'):
             raise serializers.ValidationError(
                 {'tags': 'Нужно указать минимум 1 тег.'}

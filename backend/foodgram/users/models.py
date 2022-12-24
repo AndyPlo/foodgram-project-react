@@ -5,13 +5,13 @@ from django.db import models
 class User(AbstractUser):
     email = models.EmailField(max_length=254, unique=True)
 
-    def __str__(self):
-        return self.username
-
     class Meta:
         ordering = ['id']
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
+
+    def __str__(self):
+        return self.username
 
 
 class Subscribe(models.Model):

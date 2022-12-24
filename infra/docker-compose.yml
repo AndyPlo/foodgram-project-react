@@ -9,7 +9,10 @@ services:
       - ./.env
   
   backend:
-      image: andyplo/foodgram_backend:v.21.12.22
+      # image: andyplo/foodgram_backend:v.21.12.22
+      build:
+        context: ../backend
+        dockerfile: Dockerfile
       restart: always
       volumes:
         - static_value:/app/static/
