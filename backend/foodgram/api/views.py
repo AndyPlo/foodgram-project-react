@@ -10,7 +10,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from users.models import Subscribe, User
-from .pagination import CustomPagination
+from .pagination import CustomPaginator
 
 from .filters import RecipeFilter
 from .permissions import IsAuthorOrReadOnly
@@ -30,7 +30,7 @@ class UserViewSet(mixins.CreateModelMixin,
                   mixins.RetrieveModelMixin,
                   viewsets.GenericViewSet):
     queryset = User.objects.all()
-    pagination_class = CustomPagination
+    pagination_class = CustomPaginator
     permission_classes = (AllowAny,)
 
     def get_serializer_class(self):
@@ -110,7 +110,7 @@ class TagViewSet(mixins.ListModelMixin,
 
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
-    pagination_class = CustomPagination
+    pagination_class = CustomPaginator
     permission_classes = (IsAuthorOrReadOnly, )
     filter_backends = (DjangoFilterBackend, )
     filterset_class = RecipeFilter
