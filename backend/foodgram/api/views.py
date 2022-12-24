@@ -7,7 +7,6 @@ from recipes.models import (Favorite, Ingredient, Recipe, Recipe_ingredient,
                             Shopping_cart, Tag)
 from rest_framework import filters, mixins, status, viewsets
 from rest_framework.decorators import action
-# from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from users.models import Subscribe, User

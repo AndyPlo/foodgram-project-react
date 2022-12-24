@@ -231,7 +231,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     author = UserReadSerializer(read_only=True)
     id = serializers.ReadOnlyField()
     ingredients = RecipeIngredientCreateSerializer(many=True)
-    # image = Base64ImageField()
+    image = Base64ImageField()
 
     class Meta:
         model = Recipe
@@ -244,7 +244,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             'tags': {'required': True, 'allow_blank': False},
             'name': {'required': True, 'allow_blank': False},
             'text': {'required': True, 'allow_blank': False},
-            # 'image': {'required': True, 'allow_blank': False},
+            'image': {'required': True, 'allow_blank': False},
             'cooking_time': {'required': True},
         }
 
