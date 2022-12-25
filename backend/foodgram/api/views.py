@@ -31,6 +31,7 @@ class UserViewSet(mixins.CreateModelMixin,
                   viewsets.GenericViewSet):
     queryset = User.objects.all()
     permission_classes = (AllowAny,)
+    pagination_class = CustomPaginator
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
@@ -59,12 +60,12 @@ class UserViewSet(mixins.CreateModelMixin,
     def subscriptions(self, request):
         queryset = User.objects.filter(subscribing__user=request.user)
         pages = self.paginate_queryset(queryset)
-        if pages:
-            serializer = SubscriptionsSerializer(pages, many=True,
-                                                 context={'request': request})
-        else:
-            serializer = SubscriptionsSerializer(queryset, many=True,
-                                                 context={'request': request})
+        # if pages:
+        serializer = SubscriptionsSerializer(pages, many=True,
+                                                context={'request': request})
+        # else:
+        #     serializer = SubscriptionsSerializer(queryset, many=True,
+        #                                          context={'request': request})
         return self.get_paginated_response(serializer.data)
 
     @action(detail=True, methods=['post', 'delete'],
