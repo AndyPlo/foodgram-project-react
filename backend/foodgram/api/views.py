@@ -11,7 +11,6 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from users.models import Subscribe, User
 from .pagination import CustomPaginator
-from rest_framework.pagination import PageNumberPagination
 
 from .filters import RecipeFilter
 from .permissions import IsAuthorOrReadOnly
@@ -31,7 +30,6 @@ class UserViewSet(mixins.CreateModelMixin,
                   mixins.RetrieveModelMixin,
                   viewsets.GenericViewSet):
     queryset = User.objects.all()
-    # pagination_class = PageNumberPagination
     permission_classes = (AllowAny,)
 
     def get_serializer_class(self):
@@ -61,13 +59,12 @@ class UserViewSet(mixins.CreateModelMixin,
     def subscriptions(self, request):
         queryset = User.objects.filter(subscribing__user=request.user)
         pages = self.paginate_queryset(queryset)
-        if pages is not None:
+        if pages:
             serializer = SubscriptionsSerializer(pages, many=True,
                                                  context={'request': request})
-            return self.get_paginated_response(serializer.data)
         serializer = SubscriptionsSerializer(queryset, many=True,
                                              context={'request': request})
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return self.get_paginated_response(serializer.data)
 
     @action(detail=True, methods=['post', 'delete'],
             permission_classes=(IsAuthenticated,))
