@@ -10,14 +10,14 @@
 
 - Проект завернут в Docker-контейнеры;
 - Образы foodgram_frontend и foodgram_backend запушены на DockerHub;
-- Проект развернут на сервере <http://51.250.25.224/>;
+- Реализован workflow c автодеплоем на удаленный сервер и отправкой сообщения в Telegram;
 - Суперюзер - admin, пароль - admin, email - admin@mail.ru;
 
 ## Развертывание проекта
 
 ### Развертывание на локальном сервере
 
-1. Установите на сервере `docker` и `docker-dompose`.
+1. Установите на сервере `docker` и `docker-compose`.
 2. Создайте файл `/infra/.env`. Шаблон для заполнения файла нахоится в `/infra/.env.example`.
 3. Выполните команду `docker-compose up -d --buld`.
 4. Выполните миграции `docker-compose exec backend python manage.py migrate`.

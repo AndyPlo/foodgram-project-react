@@ -19,16 +19,18 @@ class TagAdmin(admin.ModelAdmin):
 
 @admin.register(models.Recipe)
 class RecipeAdmin(admin.ModelAdmin):
-    list_display = (
-        'pk', 'name', 'text', 'cooking_time',
-        'image', 'author', 'pub_date'
-    )
+    list_display = ('pk', 'name', 'author', 'in_favorites')
     list_editable = (
-        'name', 'cooking_time',
+        'name', 'cooking_time', 'text', 'tags',
         'image', 'author'
     )
+    readonly_fields = ('in_favorites',)
     list_filter = ('name', 'author', 'tags')
     empty_value_display = '-пусто-'
+
+    @admin.display(description='В избранном')
+    def in_favorites(self, obj):
+        return obj.favorite_recipe.count()
 
 
 @admin.register(models.Recipe_ingredient)
