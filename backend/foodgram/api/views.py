@@ -31,7 +31,7 @@ class UserViewSet(mixins.CreateModelMixin,
                   mixins.RetrieveModelMixin,
                   viewsets.GenericViewSet):
     queryset = User.objects.all()
-    pagination_class = PageNumberPagination
+    # pagination_class = PageNumberPagination
     permission_classes = (AllowAny,)
 
     def get_serializer_class(self):
