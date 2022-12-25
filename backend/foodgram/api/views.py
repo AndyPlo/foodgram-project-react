@@ -56,16 +56,13 @@ class UserViewSet(mixins.CreateModelMixin,
                         status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=['get'],
-            permission_classes=(IsAuthenticated,))
+            permission_classes=(IsAuthenticated,),
+            pagination_class=CustomPaginator)
     def subscriptions(self, request):
         queryset = User.objects.filter(subscribing__user=request.user)
-        pages = self.paginate_queryset(queryset)
-        # if pages:
-        serializer = SubscriptionsSerializer(pages, many=True,
-                                                context={'request': request})
-        # else:
-        #     serializer = SubscriptionsSerializer(queryset, many=True,
-        #                                          context={'request': request})
+        page = self.paginate_queryset(queryset)
+        serializer = SubscriptionsSerializer(page, many=True,
+                                             context={'request': request})
         return self.get_paginated_response(serializer.data)
 
     @action(detail=True, methods=['post', 'delete'],
