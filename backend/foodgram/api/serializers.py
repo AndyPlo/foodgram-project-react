@@ -258,7 +258,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         }
 
     def validate(self, obj):
-        for field in ['name', 'text', 'cooking_time', 'image']:
+        for field in ['name', 'text', 'cooking_time']:
             if not obj.get(field):
                 raise serializers.ValidationError(
                     f'{field} - Обязательное поле.'
