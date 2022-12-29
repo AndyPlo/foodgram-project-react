@@ -11,7 +11,7 @@
 - Проект завернут в Docker-контейнеры;
 - Образы foodgram_frontend и foodgram_backend запушены на DockerHub;
 - Реализован workflow c автодеплоем на удаленный сервер и отправкой сообщения в Telegram;
-- Суперюзер - admin, пароль - admin, email - admin@mail.ru;
+- Проект развернут на сервере: <http://51.250.25.224/recipes>
 
 ## Развертывание проекта
 
